@@ -1,9 +1,8 @@
 FROM ubuntu:24.04
 
-# Install system dependencies and all required libraries for CPR/curl
+# Install system dependencies
 RUN apt-get update && \
     apt-get install -y \
-        build-essential \
         cmake \
         git \
         libbrotli-dev \
@@ -21,6 +20,13 @@ RUN apt-get update && \
         wget \
         zlib1g-dev && \
     rm -rf /var/lib/apt/lists/*
+
+# Build and install CPR from source
+RUN git clone --depth=1 https://github.com/libcpr/cpr.git /tmp/cpr && \
+    cd /tmp/cpr && \
+    cmake -DCMAKE_BUILD_TYPE=Release -DCPR_USE_SYSTEM_CURL=ON . && \
+    make -j$(nproc) && make install && \
+    rm -rf /tmp/cpr
 
 # Install nlohmann/json (header-only)
 RUN mkdir -p /usr/local/include/nlohmann && \
