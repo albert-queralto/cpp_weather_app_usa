@@ -1,0 +1,29 @@
+name: weather_data_usa
+services:
+  db:
+    container_name: database
+    image: postgres:16
+    environment:
+      POSTGRES_USER: weather # just for testing
+      POSTGRES_PASSWORD: weatherpass # just for testing
+      POSTGRES_DB: weatherdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db:/var/lib/postgresql/data
+    restart: always
+
+  app:
+    container_name: weather_app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgres://weather:weatherpass@database/weatherdb # just for testing
+    depends_on:
+      - db
+    restart: always
+
+volumes:
+  db:
+    external: true
