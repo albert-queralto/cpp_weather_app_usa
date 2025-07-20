@@ -1,0 +1,10 @@
+.leaflet-popup-content {
+    width: 500px !important;
+    max-width: 90vw;
+    min-width: 300px;
+    padding: 10px;
+}
+    .weather-chart-container {
+    width: 100%;
+    min-height: 300px;
+}
