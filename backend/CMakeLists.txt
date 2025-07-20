@@ -12,7 +12,7 @@ include_directories(
     ${PQXX_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/include
     /usr/include # For cpr/cpr.h (system install)
-    /usr/local/include # For nlohmann/json.hpp
+    /usr/local/include # For nlohmann/json.hpp and crow_all.h
 )
 
 file(GLOB SOURCES
@@ -21,10 +21,6 @@ file(GLOB SOURCES
 
 add_executable(weather_backend
     ${SOURCES}
-    # main.cpp
-    # weather_api_client.cpp
-    # weather_database.cpp
-    # weather_helpers.cpp
 )
 
 # Link with system libraries directly
@@ -35,4 +31,6 @@ target_link_libraries(weather_backend
     curl
     ssl
     crypto
+    boost_system
+    pthread
 )
