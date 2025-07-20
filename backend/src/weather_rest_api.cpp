@@ -1,4 +1,11 @@
 #include "weather_rest_api.h"
+#include <openssl/sha.h>
+#include <iomanip>
+#include <sstream>
+#include "utils.h"
+#include <pqxx/pqxx>
+#include "db_config.h"
+
 
 WeatherRestApi::WeatherRestApi(WeatherApiClient& api_client, WeatherDatabase& db)
     : api_client_(api_client), db_(db) {
@@ -87,6 +94,58 @@ void WeatherRestApi::setup_routes() {
         res.add_header("Cache-Control", "no-store");
         return res;
     });
+
+    CROW_ROUTE(app_, "/api/signup").methods("POST"_method)
+    ([this](const crow::request& req) {
+        auto body = nlohmann::json::parse(req.body, nullptr, false);
+        if (!body.contains("email") || !body.contains("password"))
+            return crow::response(400, "Missing email or password");
+
+        std::string email = body["email"];
+        std::string password = body["password"];
+        std::string hash = sha256(password);
+
+        try {
+            pqxx::connection conn(DB_CONN_STR);
+            pqxx::work txn(conn);
+            txn.exec_params(
+                "INSERT INTO users (email, password_hash) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+                email, hash
+            );
+            txn.commit();
+            return crow::response(201, "User created");
+        } catch (...) {
+            return crow::response(500, "Signup failed");
+        }
+    });
+
+    CROW_ROUTE(app_, "/api/login").methods("POST"_method)
+    ([this](const crow::request& req) {
+        auto body = nlohmann::json::parse(req.body, nullptr, false);
+        if (!body.contains("email") || !body.contains("password"))
+            return crow::response(400, "Missing email or password");
+
+        std::string email = body["email"];
+        std::string password = body["password"];
+        std::string hash = sha256(password);
+
+        try {
+            pqxx::connection conn(DB_CONN_STR);
+            pqxx::work txn(conn);
+            auto rows = txn.exec_params(
+                "SELECT id FROM users WHERE email = $1 AND password_hash = $2",
+                email, hash
+            );
+            if (rows.empty())
+                return crow::response(401, "Invalid credentials");
+            return crow::response(200, "Login successful");
+        } catch (...) {
+            return crow::response(500, "Login failed");
+        }
+    });
+
+
+
 }
 
 void WeatherRestApi::run(int port) {
