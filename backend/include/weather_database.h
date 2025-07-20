@@ -4,6 +4,8 @@
 
 class WeatherDatabase {
 public:
+    WeatherDatabase();
+
     void store_observation(
         const std::string& station_id, 
         const std::string& parameter_name,
