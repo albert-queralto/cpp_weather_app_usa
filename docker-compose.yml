@@ -24,5 +24,16 @@ services:
       - db
     restart: always
 
+  frontend:
+    container_name: weather_frontend
+    build:
+      context: .
+      dockerfile: ./frontend/Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    restart: always
+
 volumes:
   pgdata:
