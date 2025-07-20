@@ -4,6 +4,8 @@
 #include <thread>
 #include <chrono>
 
+constexpr const char* DB_CONN_STR = "postgresql://weather:weatherpass@database:5432/weatherdb";
+
 void WeatherDatabase::store_observation(
     const std::string& station_id, 
     const std::string& parameter_name,
@@ -14,7 +16,7 @@ void WeatherDatabase::store_observation(
     int retries = 10;
     while (retries--) {
         try {
-            pqxx::connection conn("postgresql://weather:weatherpass@database:5432/weatherdb");
+            pqxx::connection conn(DB_CONN_STR);
             pqxx::work txn(conn);
 
             txn.exec(R"(
@@ -22,7 +24,7 @@ void WeatherDatabase::store_observation(
                     id SERIAL PRIMARY KEY,
                     station VARCHAR(10),
                     parameter_name VARCHAR(50) DEFAULT 'temperature',
-                    parameter_unit VARCHAR(10) DEFAULT 'Celsius',
+                    parameter_unit VARCHAR(50) DEFAULT 'Celsius',
                     value DOUBLE PRECISION,
                     observed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -54,7 +56,7 @@ void WeatherDatabase::store_station_coordinates(
     int retries = 10;
     while (retries--) {
         try {
-            pqxx::connection conn("postgresql://weather:weatherpass@database:5432/weatherdb");
+            pqxx::connection conn(DB_CONN_STR);
             pqxx::work txn(conn);
 
             txn.exec(R"(
