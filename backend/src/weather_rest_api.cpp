@@ -6,13 +6,6 @@ WeatherRestApi::WeatherRestApi(WeatherApiClient& api_client, WeatherDatabase& db
 }
 
 void WeatherRestApi::setup_routes() {
-    // GET /api/stations - list all stations from the database
-    CROW_ROUTE(app_, "/api/stations")
-    ([this]() {
-        auto stations_json = db_.fetch_all_stations();
-        return crow::response(stations_json.dump());
-    });
-
     // GET /api/observations/latest?station_id=<id> - fetch latest observation for a station
     CROW_ROUTE(app_, "/api/observations/latest")
     .methods("GET"_method)
@@ -79,6 +72,16 @@ void WeatherRestApi::setup_routes() {
             res.add_header("Content-Type", "application/json");
             return res;
         }
+    });
+
+    // GET /api/stations - list all stations with coordinates
+    CROW_ROUTE(app_, "/api/stations")
+    ([this]() {
+        auto stations_json = db_.fetch_all_stations();
+        crow::response res(stations_json.dump());
+        res.add_header("Content-Type", "application/json");
+        res.add_header("Cache-Control", "no-store");
+        return res;
     });
 }
 
