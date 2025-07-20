@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <nlohmann/json.hpp>
 
 class WeatherDatabase {
 public:
@@ -16,6 +17,7 @@ public:
         double longitude,
         double latitude
     );
+
     nlohmann::json fetch_all_stations();
     nlohmann::json fetch_latest_observation(const std::string& station_id);
     nlohmann::json fetch_observations_in_range(
@@ -23,4 +25,5 @@ public:
         const std::string& start_time,
         const std::string& end_time
     );
+    nlohmann::json fetch_all_variables();
 };
