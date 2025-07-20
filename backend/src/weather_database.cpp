@@ -135,7 +135,7 @@ nlohmann::json WeatherDatabase::fetch_latest_observation(const std::string& stat
     return result;
 }
 
-nlohmann::json WeatherDAtabase::fetch_observations_in_range(
+nlohmann::json WeatherDatabase::fetch_observations_in_range(
     const std::string& station_id,
     const std::string& start_time,
     const std::string& end_time
@@ -164,6 +164,23 @@ nlohmann::json WeatherDAtabase::fetch_observations_in_range(
         }
     } catch (const std::exception& e) {
         std::cerr << "[DB ERROR] Failed to fetch observations in range for station " << station_id << ": " << e.what() << std::endl;
+        return nlohmann::json::array();
+    }
+    return result;
+}
+
+nlohmann::json WeatherDatabase::fetch_all_variables() {
+    nlohmann::json result = nlohmann::json::array();
+    try {
+        pqxx::connection conn(DB_CONN_STR);
+        pqxx::work txn(conn);
+
+        auto rows = txn.exec("SELECT DISTINCT parameter_name FROM weather_observations");
+        for (const auto& row : rows) {
+            result.push_back(row["parameter_name"].c_str());
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "[DB ERROR] Failed to fetch all variables: " << e.what() << std::endl;
         return nlohmann::json::array();
     }
     return result;
