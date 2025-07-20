@@ -46,7 +46,40 @@ void WeatherRestApi::setup_routes() {
             return crow::response(404, "No observations found for station in range");
         }
         return crow::response(obs_json.dump());
-    })
+    });
+
+    // GET /api/variables - list all variables from the database
+    CROW_ROUTE(app_, "/api/variables")
+    ([this]() {
+        auto variables_json = db_.fetch_all_variables();
+        crow::response res(variables_json.dump());
+        res.add_header("Content-Type", "application/json");
+        res.add_header("Cache-Control", "no-store");
+        return res;
+    });
+
+    // GET /api/station_ids - list all station IDs from the database
+    CROW_ROUTE(app_, "/api/station_ids")
+    ([this]() {
+        try {
+            auto stations_json = db_.fetch_all_stations();
+            nlohmann::json ids = nlohmann::json::array();
+            for (const auto& station : stations_json) {
+                if (station.contains("station_identifier")) {
+                    ids.push_back(station["station_identifier"]);
+                }
+            }
+            crow::response res(ids.dump());
+            res.add_header("Content-Type", "application/json");
+            res.add_header("Cache-Control", "no-store");
+            return res;
+        } catch (const std::exception& e) {
+            crow::response res("{\"error\":\"Internal server error\"}");
+            res.code = 500;
+            res.add_header("Content-Type", "application/json");
+            return res;
+        }
+    });
 }
 
 void WeatherRestApi::run(int port) {
