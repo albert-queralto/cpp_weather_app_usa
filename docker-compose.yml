@@ -10,11 +10,11 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./db:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
     restart: always
 
-  app:
-    container_name: weather_app
+  backend:
+    container_name: weather_backend
     build:
       context: .
       dockerfile: ./backend/Dockerfile
@@ -25,4 +25,4 @@ services:
     restart: always
 
 volumes:
-  db:
+  pgdata:
