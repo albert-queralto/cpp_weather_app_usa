@@ -1,0 +1,1 @@
+const char* DB_CONN_STR = "postgresql://weather:weatherpass@database:5432/weatherdb";
