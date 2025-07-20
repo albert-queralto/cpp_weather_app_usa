@@ -48,3 +48,7 @@ void WeatherRestApi::setup_routes() {
         return crow::response(obs_json.dump());
     })
 }
+
+void WeatherRestApi::run(int port) {
+    app_.port(port).multithreaded().run();
+}
