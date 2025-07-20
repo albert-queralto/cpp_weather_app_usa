@@ -3,8 +3,46 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include "utils.h"
+#include <pqxx/pqxx>
+#include "db_config.h"
 
-constexpr const char* DB_CONN_STR = "postgresql://weather:weatherpass@database:5432/weatherdb";
+
+WeatherDatabase::WeatherDatabase() {
+    int retries = 10;
+    while (retries--) {
+        try {
+            pqxx::connection conn(DB_CONN_STR);
+            pqxx::work txn(conn);
+
+            // Create users table if it doesn't exist
+            txn.exec(R"(
+                CREATE TABLE IF NOT EXISTS users (
+                    id SERIAL PRIMARY KEY,
+                    email VARCHAR(255) UNIQUE NOT NULL,
+                    password_hash VARCHAR(255) NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            )");
+
+            // Insert default admin user
+            std::string admin_email = "admin@admin.com";
+            std::string admin_password_hash = sha256("admin");
+            txn.exec_params(
+                "INSERT INTO users (email, password_hash) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+                admin_email, admin_password_hash
+            );
+
+            txn.commit();
+            break;
+        } catch (const std::exception& e) {
+            std::cerr << "[DB ERROR] Database connection failed: " << e.what() << std::endl;
+            if (retries == 0) break;
+            std::this_thread::sleep_for(std::chrono::seconds(3));
+            std::cerr << "[DB] Retrying database connection..." << std::endl;
+        }
+    }
+}
 
 void WeatherDatabase::store_observation(
     const std::string& station_id, 
