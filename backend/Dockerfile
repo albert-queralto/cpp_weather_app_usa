@@ -5,6 +5,7 @@ RUN apt-get update && \
     apt-get install -y \
         cmake \
         git \
+        libasio-dev \
         libboost-all-dev \
         libbrotli-dev \
         libcurl4-openssl-dev \
