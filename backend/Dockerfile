@@ -5,6 +5,7 @@ RUN apt-get update && \
     apt-get install -y \
         cmake \
         git \
+        libboost-all-dev \
         libbrotli-dev \
         libcurl4-openssl-dev \
         libidn2-0-dev \
@@ -31,6 +32,9 @@ RUN git clone --depth=1 https://github.com/libcpr/cpr.git /tmp/cpr && \
 # Install nlohmann/json (header-only)
 RUN mkdir -p /usr/local/include/nlohmann && \
     wget https://github.com/nlohmann/json/releases/download/v3.12.0/json.hpp -O /usr/local/include/nlohmann/json.hpp
+
+# Download and install crow_all.h
+RUN wget https://github.com/CrowCpp/Crow/releases/download/v1.2.1.2/crow_all.h -O /usr/local/include/crow_all.h
 
 WORKDIR /app/backend
 
