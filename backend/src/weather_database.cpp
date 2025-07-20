@@ -85,3 +85,86 @@ void WeatherDatabase::store_station_coordinates(
         }
     }
 }
+
+nlohmann::json WeatherDatabase::fetch_all_stations() {
+    nlohmann::json result = nlohmann::json::array();
+    try {
+        pqxx::connection conn(DB_CONN_STR);
+        pqxx::work txn(conn);
+
+        auto rows = txn.exec("SELECT station_identifier, longitude, latitude FROM weather_stations");
+        for (const auto& row : rows) {
+            nlohmann::json station;
+            station["station_identifier"] = row["station_identifier"].c_str();
+            station["longitude"] = row["longitude"].as<double>();
+            station["latitude"] = row["latitude"].as<double>();
+            result.push_back(station);
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "[DB ERROR] Failed to fetch stations: " << e.what() << std::endl;
+        return nlohmann::json::array();
+    }
+    return result;
+}
+
+nlohmann::json WeatherDatabase::fetch_latest_observation(const std::string& station_id) {
+    nlohmann::json result;
+    try {
+        pqxx::connection conn(DB_CONN_STR);
+        pqxx::work txn(conn);
+
+        auto rows = txn.exec_params(
+            "SELECT parameter_name, parameter_unit, value, observed_at "
+            "FROM weather_observations "
+            "WHERE station = $1 "
+            "ORDER BY observed_at DESC LIMIT 1",
+            station_id
+        );
+        if (rows.empty()) {
+            const auto& row = rows[0];
+            result["station"] = station_id;
+            result["parameter_name"] = row["parameter_name"].c_str();
+            result["parameter_unit"] = row["parameter_unit"].c_str();
+            result["value"] = row["value"].as<double>();
+            result["observed_at"] = row["observed_at"].c_str();
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "[DB ERROR] Failed to fetch latest observation for station " << station_id << ": " << e.what() << std::endl;
+        return nlohmann::json();
+    }
+    return result;
+}
+
+nlohmann::json WeatherDAtabase::fetch_observations_in_range(
+    const std::string& station_id,
+    const std::string& start_time,
+    const std::string& end_time
+) {
+    nlohmann::json result = nlohmann::json::array();
+    try {
+        pqxx::connection conn(DB_CONN_STR);
+        pqxx::work txn(conn);
+
+        auto rows = txn.exec_params(
+            "SELECT parameter_name, parameter_unit, value, observed_at "
+            "FROM weather_observations "
+            "WHERE station = $1 AND observed_at BETWEEN $2 AND $3 "
+            "ORDER BY observed_at ASC",
+            station_id, start_time, end_time
+        );
+
+        for (const auto& row : rows) {
+            nlohmann::json obs;
+            obs["station"] = station_id;
+            obs["parameter_name"] = row["parameter_name"].c_str();
+            obs["parameter_unit"] = row["parameter_unit"].c_str();
+            obs["value"] = row["value"].as<double>();
+            obs["observed_at"] = row["observed_at"].c_str();
+            result.push_back(obs);
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "[DB ERROR] Failed to fetch observations in range for station " << station_id << ": " << e.what() << std::endl;
+        return nlohmann::json::array();
+    }
+    return result;
+}
