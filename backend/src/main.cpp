@@ -1,6 +1,7 @@
 #include "weather_api_client.h"
 #include "weather_database.h"
 #include "weather_helpers.h"
+#include "weather_rest_api.h"
 #include <iostream>
 #include <thread>
 #include <chrono>
@@ -9,6 +10,11 @@ int main() {
     std::cout << "[START] Weather data fetcher started." << std::endl;
     WeatherApiClient api_client;
     WeatherDatabase db;
+
+    WeatherRestApi rest_api(api_client, db);
+    std::thread api_thread([&rest_api]() {
+        rest_api.run(8080);
+    });
 
     auto stations_json = api_client.fetch_all_stations();
     if (stations_json.is_null()) {
@@ -49,5 +55,6 @@ int main() {
         std::this_thread::sleep_for(std::chrono::minutes(30));
     }
 
+    api_thread.join();
     return 0;
 }
