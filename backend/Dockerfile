@@ -32,10 +32,10 @@ RUN git clone --depth=1 https://github.com/libcpr/cpr.git /tmp/cpr && \
 RUN mkdir -p /usr/local/include/nlohmann && \
     wget https://github.com/nlohmann/json/releases/download/v3.12.0/json.hpp -O /usr/local/include/nlohmann/json.hpp
 
-WORKDIR /app
+WORKDIR /app/backend
 
-COPY . .
+COPY backend/ .
 
 RUN cmake -Bbuild -H. && cmake --build build
 
-CMD ["./build/weather_fetch"]
+CMD ["./build/weather_backend"]

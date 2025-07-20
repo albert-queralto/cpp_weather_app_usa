@@ -17,7 +17,7 @@ services:
     container_name: weather_app
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: ./backend/Dockerfile
     environment:
       DATABASE_URL: postgres://weather:weatherpass@database/weatherdb # just for testing
     depends_on:
@@ -26,4 +26,3 @@ services:
 
 volumes:
   db:
-    external: true
