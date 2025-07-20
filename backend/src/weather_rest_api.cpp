@@ -19,7 +19,9 @@ void WeatherRestApi::setup_routes() {
         if (obs_json.is_null()) {
             return crow::response(404, "No observations found for station");
         }
-        return crow::response(obs_json.dump());
+        crow::response res(obs_json.dump());
+        res.add_header("Content-Type", "application/json");
+        return res;
     });
 
     // GET /api/observations/range?station_id=<id>&start=<iso8601>&end=<iso8601>
@@ -38,7 +40,9 @@ void WeatherRestApi::setup_routes() {
         if (obs_json.empty()) {
             return crow::response(404, "No observations found for station in range");
         }
-        return crow::response(obs_json.dump());
+        crow::response res(obs_json.dump());
+        res.add_header("Content-Type", "application/json");
+        return res;
     });
 
     // GET /api/variables - list all variables from the database
